@@ -1,16 +1,16 @@
 {
   "name": "hub_t_server",
   "version": "0.0.0",
-  "description":"hubT",
-  "License":"HUB T",
-  "author":{
-    "name":"EuiSeok, SeungKyu, TaeYoung"
+  "description": "hubT",
+  "License": "HUB T",
+  "author": {
+    "name": "EuiSeok, SeungKyu, TaeYoung"
   },
-  "repository":{
-    "type":"git",
-    "url":"https://github.com/leedy02/Saving-Taxi-Costs-by-Sharing-Taxis"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leedy02/Saving-Taxi-Costs-by-Sharing-Taxis"
   },
-  "keywords":[
+  "keywords": [
     "Node.js",
     "MVC",
     "Express"
@@ -21,9 +21,11 @@
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
+    "cors": "2.8.5",
     "debug": "~2.6.9",
     "express": "4.16.4",
     "http-errors": "~1.6.3",
+    "jsonwebtoken": "8.5.1",
     "morgan": "~1.9.1",
     "mysql": "2.18.1",
     "pug": "2.0.0-beta11"
