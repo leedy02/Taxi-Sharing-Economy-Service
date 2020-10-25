@@ -88,8 +88,8 @@ function third_candidate1(host_id, prev_candidate) {
     var host_cost;
     connection.query('SELECT dest,cur_loc, total_dist, cost FROM drive_info WHERE id = ' + host_id, (error, rows) => {
         if (error) throw error;
-        host_dest = rows[0].dest;
-        host_loc = rows[0].cur_loc;
+        host_dest = [rows[0].dest_x,rows[0].dest_y];
+        host_loc = [rows[0].cur_loc_x,rows[0].cur_loc_y];
         host_total_dist = rows[0].total_dist;
         host_cost = rows[0].cost;
     });
@@ -101,53 +101,64 @@ function third_candidate1(host_id, prev_candidate) {
         var guest_cost;
         connection.query('SELECT depar, dest, total_dist, cost FROM destination WHERE id = ' + guest_id, (error, rows) => {
             if (error) throw error;
-            guest_depar = rows[0].depar;
-            guest_dest = rows[0].dest;
+            guest_depar = [rows[0].depar_x,rows[0].depar_y];
+            guest_dest = [rows[0].dest_x,rows[0].dest_y];
             guest_total_dist = rows[0].total_dist;
             guest_cost = rows[0].cost;
         });
         if (measure(host_loc, guest_depar) + measure(guest_dest, host_dset) +
             Math.min(measure(guest_depar, host_dest), measure(guest_depar, guest_dest)) <=
             (host_total_dist + guest_total_dist) * 0.7) {
-            candidate.push([guest_id, guest_depar, guest_total_dist, guest_cost]);
+            candidate.push([guest_id, guest_depar, guest_dest, guest_cost]);
         }
     }
     return final_candidate(host_id, host_loc, host_dest, host_cost, candidate);
 }
 
-function final_candidate(host_id, host_loc, host_desthost_cost, prev_candidate) {
+function third_candidate3(host_id, prev_candidate) {
+    var candidate = [];
+    var host_loc;
+    var host_dest;
+    var host_cost;
+    connection.query('SELECT dest,cur_loc, total_dist, cost FROM drive_info WHERE id = ' + host_id, (error, rows) => {
+        if (error) throw error;
+        host_dest = [rows[0].dest_x,rows[0].dest_y];
+        host_loc = [rows[0].cur_loc_x,rows[0].cur_loc_y];
+        host_cost = rows[0].cost;
+    });
+    var host_vector = [host_dest[0] - host_loc[0] , host_dest[1] - host_loc[1]];
+    for (var i = 0; i < prev_candidate.length; i++) {
+        var guest_id = prev_candidate[i];
+        var guest_depar;
+        var guest_dest;
+        var guest_cost
+        connection.query('SELECT depar, dest, total_dist, cost FROM destination WHERE id = ' + guest_id, (error, rows) => {
+            if (error) throw error;
+            guest_depar = [rows[0].depar_x,rows[0].depar_y];
+            guest_dest = [rows[0].dest_x,rows[0].dest_y];
+            guest_cost = rows[0].cost;
+        });
+        var guest_vector = [guest_dest[0] - guest_depar[0] , guest_dest[1] - guest_depar[1]];
+        var product = host_vector[0] * guest_vector[0] + host_vector[1] * guest_vector[1];
+        var cos = product/Math.sqrt(host_vector[0]*host_vector[0] + host_vector[1]*host_vector[1])/Math.sqrt(guest_vector[0]*guest_vector[0] + guest_vector[1]*guest_vector[1])
+        if(cos >= 0.7)candidate.push([guest_id,guest_depar,guest_dest,guest_cost]);
+    }
+    return final_candidate(host_id, host_loc, host_dest, host_cost, candidate);
+}
+
+function final_candidate(host_id, host_loc, host_dest,host_cost, prev_candidate) {
     var final_route;
     var rate = 1.0;
-    var guest_id;
-    var new_route;
     for (var i = 0; i < prev_candidate.length; i++) {
+        var guest_id = prev_candidate[i][0];
+        var guest_depar = prev_candidate[1];
+        var guest_dest = prev_candidate[2];
+        var new_route;
         //api로 모든 경로 탐색
         axios({
             method: 'post',
             headers: {
                 "appKey": "l7xx4a5a83a6d55042c1a42f4731cc66801f",
-            },
-            url: 'https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result',
-            async: false,
-            data: {
-                "startX": host_loc[0],
-                "startY": host_loc[1],
-                "endX": host_dest[0],
-                "endY": host_dest[1],
-                "reqCoordType": "WGS84GEO",
-                "resCoordType": "WGS84GEO",
-                "searchOption": "0",
-                "trafficInfo": "N",
-                "passList": "" + guest_depar[0] + "," + guest_depar[1] + "," + guest_dest[0] + "," + guestdest[1]
-            }
-        })
-            .then(function (response) {
-                new_route = response;
-            });
-        axios({
-            method: 'post',
-            headers: {
-                "appKey": app_key,
             },
             url: 'https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result',
             async: false,
